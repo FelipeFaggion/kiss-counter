@@ -4,7 +4,9 @@ document.addEventListener("DOMContentLoaded", function () {
     const kissCounter = document.getElementById("kissCounter");
     const heartContainer = document.getElementById("heartContainer");
 
-    let count = 0;
+    // Verifica se já existe um contador no localStorage, caso contrário inicializa
+    let count = localStorage.getItem('kissesCount') ? parseInt(localStorage.getItem('kissesCount')) : 0;
+    kissCounter.innerText = count;
 
     // Função para aumentar e diminuir a imagem
     function animateKiss() {
@@ -14,57 +16,37 @@ document.addEventListener("DOMContentLoaded", function () {
         }, 300);
     }
 
-    // Função para adicionar corações ao fundo
-    function createBackgroundHeart() {
-        const heart = document.createElement("span");
-        heart.classList.add("heart-background");
-
-        // Define uma posição aleatória na tela
-        const heartX = Math.random() * 100; // Posição horizontal em porcentagem
-        const heartY = Math.random() * 100; // Posição vertical em porcentagem
-
-        heart.style.position = 'absolute';
-        heart.style.left = heartX + 'vw'; // Posição horizontal
-        heart.style.top = heartY + 'vh'; // Posição vertical
-
+    // Função para adicionar corações
+    function addHeart() {
+        const heart = document.createElement("div");
+        heart.classList.add("heart");
+        heart.innerHTML = "❤️";
+    
+        // Calcula posições aleatórias em relação à imagem
+        const imageRect = kissImage.getBoundingClientRect();
+        const heartX = Math.random() * imageRect.width;
+        const heartY = Math.random() * imageRect.height;
+    
+        heart.style.left = `${heartX}px`;
+        heart.style.top = `${heartY}px`;
         heartContainer.appendChild(heart);
-
-        // Remove o coração após 2 segundos
+    
         setTimeout(() => {
             heart.remove();
-        }, 2000);
+        }, 2000); // Remove o coração após a animação
     }
 
-    // Atualizar contador e interagir com backend
+    // Atualizar contador
     function updateKisses() {
         count++;
         kissCounter.innerText = count;
-
-        // Faz uma requisição ao PHP para salvar o novo valor
-        fetch('backend/update_kisses.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: `count=${count}`
-        }).then(response => response.text()).then(data => {
-            console.log(data); // Debugging
-        });
+        localStorage.setItem('kissesCount', count); // Armazena o contador no localStorage
     }
 
     // Evento de clique no botão
     kissButton.addEventListener("click", function () {
         animateKiss();
-        createBackgroundHeart(); // Adiciona um coração ao fundo
+        addHeart();
         updateKisses();
     });
-
-    // Carregar número inicial de beijos
-    fetch('backend/get_kisses.php')
-        .then(response => response.text())
-        .then(data => {
-            kissCounter.innerText = data;
-            count = parseInt(data);
-        })
-        .catch(error => console.error('Error fetching kisses:', error)); // Adicionando tratamento de erro
 });
